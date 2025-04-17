@@ -207,7 +207,8 @@ class GomokuBoard(QWidget):
     def mcts_ai_move(self):
         # 현재 보드 상태와 현재 플레이어 정보를 사용하여 AI가 돌 두기
         current_state = GomokuState(copy.deepcopy(self.board), self.current_player)
-        agent = MCTSAgent(iterations=5)    #TODO: iteration 수정
+        agent = MCTSAgent(iterations=50)    #TODO: iteration 수정
+        # agent = MCTSAgent()  # TODO: time 수정
         move = agent.select_move(current_state)
         if move is not None:
             row, col = move
