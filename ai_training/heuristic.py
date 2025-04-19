@@ -1,15 +1,18 @@
 import sys
 import os
+
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
+
 # Now you can import renju_rule
 from renju_rule import board, ban, is_invalid
+
+
 import copy
 import random
 # from renju_rule import board, ban, is_invalid
 from ai_training.rule import Rule
-
 
 BOARD_SIZE = 15
 list_dx = [-1, 1, -1, 1, 0, 0, 1, -1]

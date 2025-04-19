@@ -149,8 +149,9 @@ def check_prohibit_point(gui_board, ban):
 # 8방향에서 흑돌, 첫번째 공백만 담는 리스트 생성
 # 그 리스트에서 오목을 만들 수 있는지 확인
 # 오목을 2개 이상 만들 수 있으면 4-4로 간주하고 리턴
-def is_double_four(gui_board, y, x):
-
+def is_double_four(gui_board, y, x, stone):
+    if stone == -1:
+        return False
     four_cnt = 0
     # 양쪽 공백 나올때까지 저장(공백도 같이 저장)
     for j in range(4):
@@ -177,6 +178,14 @@ def is_double_four(gui_board, y, x):
                 else:
                     line.insert(0, gui_board[cur_y][cur_x])
                     center += 1
+    
+        make_five_check = make_five_row(line)
+        if make_five_check >= 2:
+            return True
+        elif make_five_check == 1:
+            four_cnt += 1
+        
+        if four_cnt >= 2: return True
 
     make_five_check = make_five_row(line)
     if make_five_check >= 2:
@@ -244,10 +253,11 @@ def is_overline(gui_board, y,x):
 
     return False
 
+
 def is_double_three(board, y, x, color):
     if color != 1:
         return False
-    
+
     cnt = 0
     gui_board = copy.deepcopy(board)
     gui_board[y][x] = 1
@@ -264,14 +274,14 @@ def is_double_three(board, y, x, color):
         empty_cnt = 0
         black_stone_cnt = 0
         white_stone_cnt = 0
-        
+
         while True:
             ny += yy
             nx += xx
-            
+
             if is_invalid(ny, nx):
                 break
-                
+
             if gui_board[ny][nx] == 0:
                 line.append(0)
                 empty_cnt += 1
@@ -327,7 +337,7 @@ def is_double_three(board, y, x, color):
         if open_three:
             cnt += 1
             if cnt >= 2:
-                print("is SAMSAM")
+                # print("is SAMSAM")
                 return True
             
 

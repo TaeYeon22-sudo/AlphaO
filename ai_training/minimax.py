@@ -1,3 +1,6 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import numpy as np
 from typing import Tuple, List, Optional
 from renju_rule import is_double_three, is_double_four, is_overline, check_if_win
@@ -198,6 +201,11 @@ class Minimax:
         Returns:
             유효한 수의 좌표 리스트 [(row, col), ...]
         """
+        # returns (7,7) if empty board
+        board_has_stone = any(cell != 0 for row in board for cell in row)
+        if not board_has_stone:
+            return [(7, 7)]
+
         valid_moves = []
         for i in range(15):
             for j in range(15):
@@ -219,7 +227,7 @@ class Minimax:
                     if has_neighbor:
                         if color == 1:
                             if (is_double_three(board, i, j, color) or 
-                                is_double_four(board, i, j) or 
+                                is_double_four(board, i, j, color) or 
                                 is_overline(board, i, j)):
                                 continue
                         valid_moves.append((i, j))
@@ -358,7 +366,7 @@ class Minimax:
             row, col = best_move
             if color == 1:
                 if (is_double_three(board, row, col, color) or 
-                    is_double_four(board, row, col) or 
+                    is_double_four(board, row, col, color) or 
                     is_overline(board, row, col)):
                     valid_moves = self.get_valid_moves(board, color)
                     if valid_moves:
