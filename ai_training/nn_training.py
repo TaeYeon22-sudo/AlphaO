@@ -194,7 +194,8 @@ if __name__ == '__main__':
     model = GomokuNet(board_size=board_size, input_channels=3, num_res_blocks=5, num_filters=64)
     model.to(device)
 
-    ckpt_dir = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data")
+    # ckpt_dir = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data")
+    ckpt_dir = os.path.join(os.path.dirname(__file__), "trained_data")
     os.makedirs(ckpt_dir, exist_ok=True)
 
     # Load latest checkpoint

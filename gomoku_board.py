@@ -42,7 +42,7 @@ class GomokuBoard(QWidget):
         self.is_ai_turn = False
 
         # trained_nn model loading
-        model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data", "model_checkpoint_iter_20.pth")
+        model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data", "model_checkpoint_iter_57.pth")
         # use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.net = GomokuNet().to(device)

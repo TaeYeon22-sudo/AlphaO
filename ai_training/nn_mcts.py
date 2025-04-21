@@ -2,6 +2,10 @@ import math
 import copy
 import torch
 import numpy as np
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from ai_training.nn_deeplearning import GomokuNet
 from ai_training.nn_renju_rule import check_winner, is_allowed_move  # Import terminal-state functions
 
