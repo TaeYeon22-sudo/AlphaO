@@ -30,7 +30,7 @@ class Rule(object):
             while True:
                 x, y = x + dx, y + dy
                 if self.is_invalid(x, y) or self.board[y][x] != stone:
-                    break;
+                    break
                 else:
                     cnt += 1
         return cnt
@@ -128,7 +128,7 @@ class Rule(object):
                 cnt += 1
         self.set_stone(x, y, empty)
         if cnt >= 2:
-            print("double three")
+            # print("double three")
             return True
         return False
 
@@ -142,7 +142,7 @@ class Rule(object):
                 cnt += 1
         self.set_stone(x, y, empty)
         if cnt >= 2:
-            print("double four")
+            # print("double four")
             return True
         return False
 
@@ -152,7 +152,7 @@ class Rule(object):
         if self.is_five(x, y, stone):
             return False
         elif self.is_six(x, y, stone):
-            print("overline")
+            # print("overline")
             return True
         elif self.double_three(x, y, stone) or self.double_four(x, y, stone):
             return True

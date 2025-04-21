@@ -1,7 +1,7 @@
 import copy
 import random
 from renju_rule import board, ban, is_invalid
-from rule import Rule
+from ai_training.rule import Rule
 
 BOARD_SIZE = 15
 list_dx = [-1, 1, -1, 1, 0, 0, 1, -1]
