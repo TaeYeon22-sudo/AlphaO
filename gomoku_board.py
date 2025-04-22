@@ -3,7 +3,8 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
-from ai_training.mcts_agent import GomokuState, MCTSAgent
+# MCTS 에이전트 경로를 두 번째 코드 구조에 맞춰 수정
+from ai_training.mcts.mcts_agent import GomokuState, MCTSAgent
 from renju_rule import *
 import time
 from ai_training.minimax import Minimax
@@ -29,20 +30,22 @@ class GomokuBoard(QWidget):
         self.selected_move = None
         self.parent_widget = parent
 
-############  MINIMAX ##########################################################################################
+        ############  MINIMAX ##########################################################################################
         # self.ai_model = "minimax_model"                                                                      #
-        self.ai = Minimax(depth=3)                                                                             #
-        self.is_ai_turn = False                                                                                #
-                                                                                                               #
+        self.ai = Minimax(depth=3)  #
+        self.is_ai_turn = False  #
+        #
         # AI related attributes                                                                                #
-        self.ai = Minimax(depth=3)                                                                             #
-############  MINIMAX ##########################################################################################
+        self.ai = Minimax(depth=3)  #
+        ############  MINIMAX ##########################################################################################
 
         self.is_ai_enabled = False
         self.is_ai_turn = False
 
         # trained_nn model loading
-        model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data", "model_checkpoint_iter_57.pth")
+        # model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data", "model_checkpoint_iter_57.pth")
+        model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data",
+                                  "model_checkpoint_iter_57.pth")
         # use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.net = GomokuNet().to(device)
@@ -52,17 +55,17 @@ class GomokuBoard(QWidget):
 
         self.net.eval()
         self.device = device
-        
+
         # TODO : make the size to be flexible : if window becomes smaller, the board scales down too
         self.setFixedSize(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE)
-        
+
         #################################################################
         # TODO ??? self.setFixedSize(self.sizeHint())
         # TODO : using image background, need to work on making exact placements
         # self.board_image = QPixmap(os.path.join(os.path.dirname(__file__), "board_img.png"))
-        self.background_img = QPixmap(os.path.join(os.path.dirname(__file__), "addets", "white_background.png"))
+        # 배경 이미지 경로를 assets 폴더로 수정
+        self.background_img = QPixmap(os.path.join(os.path.dirname(__file__), "assets", "white_background.png"))
         #################################################################
-
 
     def paintEvent(self, event):
         """Draws the board grid and stones."""
@@ -83,9 +86,9 @@ class GomokuBoard(QWidget):
         painter.setPen(pen)
         for i in range(BOARD_SIZE):
             painter.drawLine(i * CELL_SIZE + CELL_SIZE // 2, CELL_SIZE // 2,
-                           i * CELL_SIZE + CELL_SIZE // 2, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
+                             i * CELL_SIZE + CELL_SIZE // 2, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
             painter.drawLine(CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE // 2,
-                           (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE // 2)
+                             (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE // 2)
 
         # draw stones
         for row in range(BOARD_SIZE):
@@ -96,13 +99,13 @@ class GomokuBoard(QWidget):
                         painter.setBrush(QBrush(Qt.GlobalColor.black))
                     else:
                         painter.setBrush(QBrush(Qt.GlobalColor.white))
-                    
+
                     # 돌 중심 좌표 계산
                     x = col * CELL_SIZE + CELL_SIZE // 2
                     y = row * CELL_SIZE + CELL_SIZE // 2
                     # 돌 그리기
                     painter.drawEllipse(QPoint(x, y), STONE_SIZE, STONE_SIZE)
-                    
+
                     # highlight
                     if self.last_move == (row, col):
                         highlight_pen = QPen(Qt.GlobalColor.red, 3)
@@ -122,12 +125,13 @@ class GomokuBoard(QWidget):
         if self.current_player == 1:
             forbidden = self.get_forbidden_moves()
             self.forbidden_pixmap = QPixmap(os.path.join(os.path.dirname(__file__), "assets", "forbidden.png"))
-            img_scaled = self.forbidden_pixmap.scaled(STONE_SIZE * 2, STONE_SIZE * 2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            img_scaled = self.forbidden_pixmap.scaled(STONE_SIZE * 2, STONE_SIZE * 2,
+                                                      Qt.AspectRatioMode.KeepAspectRatio,
+                                                      Qt.TransformationMode.SmoothTransformation)
             for r, c in forbidden:
                 x = c * CELL_SIZE + CELL_SIZE // 2 - img_scaled.width() // 2
                 y = r * CELL_SIZE + CELL_SIZE // 2 - img_scaled.height() // 2
                 painter.drawPixmap(x, y, img_scaled)
-
 
     # placing stones
     def mousePressEvent(self, event):
@@ -142,16 +146,14 @@ class GomokuBoard(QWidget):
             self.selected_move = (row, col)
             self.update()
 
-
     # creates new board when a game ends
     def clearBoard(self):
-        self.board = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]  
+        self.board = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]
         self.current_player = 1
-        self.last_move = None  
+        self.last_move = None
         self.selected_move = None
         self.is_ai_turn = False
         self.update()
-
 
     def confirm_move(self):
         if not self.selected_move:
@@ -174,7 +176,6 @@ class GomokuBoard(QWidget):
             self.is_ai_turn = True
             QTimer.singleShot(100, self.run_ai_move)
 
-    
     def get_forbidden_moves(self):
         """Returns a list of forbidden (row, col) positions for Black."""
         if self.current_player != 1:
@@ -183,13 +184,12 @@ class GomokuBoard(QWidget):
         for r in range(BOARD_SIZE):
             for c in range(BOARD_SIZE):
                 if self.board[r][c] == 0 and (
-                    is_double_three(self.board, r, c, 1) or
-                    is_double_four(self.board, r, c, 1) or
-                    is_overline(self.board, r, c)
+                        is_double_three(self.board, r, c, 1) or
+                        is_double_four(self.board, r, c, 1) or
+                        is_overline(self.board, r, c)
                 ):
                     forbidden.append((r, c))
         return forbidden
-
 
     # pop up screen when someone wins / redirects to main page when clicking "ok"
     def show_win_popup(self, winner_color):
@@ -207,20 +207,22 @@ class GomokuBoard(QWidget):
     def mcts_ai_move(self):
         # 현재 보드 상태와 현재 플레이어 정보를 사용하여 AI가 돌 두기
         current_state = GomokuState(copy.deepcopy(self.board), self.current_player)
-        agent = MCTSAgent(iterations=5)    #TODO: iteration 수정
+        agent = MCTSAgent(iterations=10, max_playout_depth=7)  # TODO: iteration, max_playout_depth
         move = agent.select_move(current_state)
         if move is not None:
             row, col = move
             self.board[row][col] = self.current_player
             self.last_move = (row, col)
 
-            if check_if_win(self.board, row, col, self.current_player) == True:
+            self.update()
+            if check_if_win(self.board, row, col, self.current_player):
                 winner_color = "Black" if self.current_player == 1 else "White"
-                self.game_over(winner_color)
+                self.game_over_signal.emit(winner_color)
+                self.is_ai_turn = False
                 return
 
             self.current_player = -self.current_player
-            self.update()
+            self.is_ai_turn = False
             # 만약 AI 턴 후에도 AI가 계속 두어야 한다면 (예: 두 명의 AI 대결), 여기서 다시 호출
             # if self.current_player == -1:
             #     QTimer.singleShot(500, self.ai_move)
@@ -236,14 +238,14 @@ class GomokuBoard(QWidget):
             if self.is_valid_move(row, col):
                 self.board[row][col] = self.current_player
                 self.last_move = (row, col)
-                
+
                 if check_if_win(self.board, row, col, self.current_player):
                     winner_color = "Black" if self.current_player == 1 else "White"
                     self.game_over_signal.emit(winner_color)
                     self.is_ai_turn = False
                     return
                 else:
-                    self.current_player = -1 # if self.current_player == 1 else 1
+                    self.current_player = -1  # if self.current_player == 1 else 1
                     self.is_ai_turn = False
 
     def nn_ai_move(self):
@@ -282,7 +284,6 @@ class GomokuBoard(QWidget):
         self.current_player = 1
         self.is_ai_turn = False
 
-            
     def run_ai_move(self):
         if not self.is_ai_turn:
             return
@@ -306,26 +307,24 @@ class GomokuBoard(QWidget):
         self.is_ai_turn = False
         self.update()
 
-
     def is_valid_move(self, row, col):
         """Check if move is valid according to game rules"""
         if not (0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE):
             return False
         if self.board[row][col] != 0:
             return False
-            
+
         # Check renju rules for black
         if self.current_player == 1:
-            if (is_double_three(self.board, row, col, self.current_player) or 
-                is_double_four(self.board, row, col, self.current_player) or 
-                is_overline(self.board, row, col)):
+            if (is_double_three(self.board, row, col, self.current_player) or
+                    is_double_four(self.board, row, col, self.current_player) or
+                    is_overline(self.board, row, col)):
                 return False
         return True
 
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = GomokuBoard()
-    window.setWindowTitle("AlphO")
-    window.show()
-    sys.exit(app.exec())
+    if __name__ == '__main__':
+        app = QApplication(sys.argv)
+        window = GomokuBoard()
+        window.setWindowTitle("AlphO")
+        window.show()
+        sys.exit(app.exec())
