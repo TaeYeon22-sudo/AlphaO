@@ -1,10 +1,11 @@
 import copy
 import math
 import random
+import time
 
-from ai_training.heuristic import heuristic_evaluation, threat_blocking_score
+from ai_training.mcts.heuristic import heuristic_evaluation, threat_blocking_score
 from renju_rule import check_if_win  # renju_rule.py의 승리 판별 함수 사용
-from ai_training.heuristic import heuristic_policy  # 별도 파일에서 휴리스틱 정책 임포트
+from ai_training.mcts.heuristic import heuristic_policy  # 별도 파일에서 휴리스틱 정책 임포트
 
 BOARD_SIZE = 15
 
@@ -77,12 +78,17 @@ class MCTSNode:
         return self.children[choices.index(max(choices))]
 
 class MCTSAgent:
-    def __init__(self, iterations=1000):   # TODO : iteration count change
+    def __init__(self, iterations=10, max_playout_depth=10):
         self.iterations = iterations
+        self.max_playout_depth = max_playout_depth
+    # def __init__(self, time_limit=5.0):  # 1초 제한
+    #     self.time_limit = time_limit
 
     def select_move(self, root_state):
         root_node = MCTSNode(root_state)
+        # start_time = time.time()
 
+        # while time.time() - start_time < self.time_limit:
         for _ in range(self.iterations):
             node = root_node
             state = root_state
@@ -124,18 +130,46 @@ class MCTSAgent:
                     node = new_node
 
             # 3. Simulation (플레이아웃): 휴리스틱 정책 적용
+            ######################
+            # sim_state = state
+            # while not sim_state.is_game_over():
+            #     moves = sim_state.get_valid_moves()
+            #     if not moves:
+            #         break
+            #     move = heuristic_policy(sim_state)
+            #     if move is None:
+            #         move = random.choice(moves)
+            #     sim_state = sim_state.play_move(move)
+            ########################
+
+            # max_playout_depth = 10  # 예: 롤아웃 최대 10수 제한
             sim_state = state
-            while not sim_state.is_game_over():
+            depth = 0
+
+            # depth 조건 추가
+            while not sim_state.is_game_over() and depth < self.max_playout_depth:
+                depth += 1
+
                 moves = sim_state.get_valid_moves()
                 if not moves:
                     break
+
                 move = heuristic_policy(sim_state)
                 if move is None:
                     move = random.choice(moves)
                 sim_state = sim_state.play_move(move)
 
+            # --- 여기서 depth == max_playout_depth 로 루프가 끊겼다면 ---
+            # 비종료 상태에 대해선 heuristic 평가를 승패로 전환
+            if not sim_state.is_game_over():
+                h = evaluate_state(sim_state)
+                # h > 0 이면 current_player 입장에서 유리하다고 보고 이긴 걸로 처리
+                winner = sim_state.current_player if h > 0 else -sim_state.current_player
+            else:
+                winner = sim_state.get_winner()
+
             # 4. Backpropagation: 시뮬레이션 결과를 바탕으로 승패 정보 업데이트
-            winner = sim_state.get_winner()
+            # winner = sim_state.get_winner()
             while node is not None:
                 node.visits += 1
                 if winner != 0 and node.state.current_player == -winner:
@@ -144,6 +178,20 @@ class MCTSAgent:
 
         best_move_node = max(root_node.children, key=lambda child: child.visits)
         return best_move_node.move
+
+def evaluate_state(state):
+    """
+    state만 보고 평가 점수 하나를 리턴.
+    - heuristic_policy로 가장 좋은 수 하나를 뽑고,
+      그 수에 대한 기본+위협 점수를 합산해서 반환.
+    - 후보 수가 없다면 0 반환.
+    """
+    move = heuristic_policy(state)
+    if move is None:
+        return 0
+    # 기본 휴리스틱 + 차단 점수
+    return heuristic_evaluation(state, move) + threat_blocking_score(state, move)
+
 
 # 단독 테스트용
 if __name__ == '__main__':
