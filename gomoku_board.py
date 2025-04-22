@@ -206,20 +206,22 @@ class GomokuBoard(QWidget):
     def mcts_ai_move(self):
         # 현재 보드 상태와 현재 플레이어 정보를 사용하여 AI가 돌 두기
         current_state = GomokuState(copy.deepcopy(self.board), self.current_player)
-        agent = MCTSAgent(iterations=5)  # TODO: iteration 수정
+        agent = MCTSAgent(iterations=10, max_playout_depth=7)  # TODO: iteration, max_playout_depth
         move = agent.select_move(current_state)
         if move is not None:
             row, col = move
             self.board[row][col] = self.current_player
             self.last_move = (row, col)
 
-            if check_if_win(self.board, row, col, self.current_player) == True:
+            self.update()
+            if check_if_win(self.board, row, col, self.current_player):
                 winner_color = "Black" if self.current_player == 1 else "White"
-                self.game_over(winner_color)
+                self.game_over_signal.emit(winner_color)
+                self.is_ai_turn = False
                 return
 
             self.current_player = -self.current_player
-            self.update()
+            self.is_ai_turn = False
             # 만약 AI 턴 후에도 AI가 계속 두어야 한다면 (예: 두 명의 AI 대결), 여기서 다시 호출
             # if self.current_player == -1:
             #     QTimer.singleShot(500, self.ai_move)

@@ -78,8 +78,9 @@ class MCTSNode:
         return self.children[choices.index(max(choices))]
 
 class MCTSAgent:
-    def __init__(self, iterations=1000):   # TODO : iteration count change
+    def __init__(self, iterations=10, max_playout_depth=10):
         self.iterations = iterations
+        self.max_playout_depth = max_playout_depth
     # def __init__(self, time_limit=5.0):  # 1초 제한
     #     self.time_limit = time_limit
 
@@ -141,12 +142,12 @@ class MCTSAgent:
             #     sim_state = sim_state.play_move(move)
             ########################
 
-            max_playout_depth = 10  # 예: 롤아웃 최대 10수 제한
+            # max_playout_depth = 10  # 예: 롤아웃 최대 10수 제한
             sim_state = state
             depth = 0
 
             # depth 조건 추가
-            while not sim_state.is_game_over() and depth < max_playout_depth:
+            while not sim_state.is_game_over() and depth < self.max_playout_depth:
                 depth += 1
 
                 moves = sim_state.get_valid_moves()
@@ -168,7 +169,7 @@ class MCTSAgent:
                 winner = sim_state.get_winner()
 
             # 4. Backpropagation: 시뮬레이션 결과를 바탕으로 승패 정보 업데이트
-            winner = sim_state.get_winner()
+            # winner = sim_state.get_winner()
             while node is not None:
                 node.visits += 1
                 if winner != 0 and node.state.current_player == -winner:
