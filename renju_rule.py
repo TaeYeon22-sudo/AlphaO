@@ -186,15 +186,6 @@ def is_double_four(gui_board, y, x, stone):
             four_cnt += 1
         
         if four_cnt >= 2: return True
-
-    make_five_check = make_five_row(line)
-    if make_five_check >= 2:
-        return True
-    elif make_five_check == 1:
-        four_cnt += 1
-    
-    if four_cnt >= 2: return True
-
     return False
 
 # 받은 리스트에서 오목을 만들 수 있는지 확인
