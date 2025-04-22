@@ -106,7 +106,6 @@ def check_if_win(gui_board, y, x, color):
     # if not 5 stone
     return False
 
-
 # 흑돌이 둔 후, 금수가 생기는지 확인
 # 금수가 생기면 ban 리스트에 저장
 def find_prohibit_point(gui_board, y, x):
@@ -183,8 +182,7 @@ def is_double_four(gui_board, y, x, stone):
                 else:
                     line.insert(0, gui_board[cur_y][cur_x])
                     center += 1
-
-        # 오목되는지 체크
+    
         make_five_check = make_five_row(line)
         if make_five_check >= 2:
             return True
@@ -193,6 +191,7 @@ def is_double_four(gui_board, y, x, stone):
         
         if four_cnt >= 2: return True
 
+    return False
 
 # 받은 리스트에서 오목을 만들 수 있는지 확인
 def make_five_row(line):
@@ -264,7 +263,7 @@ def is_double_three(board, y, x, color):
         idx = direction * 2  # + i
         yy, xx = list_dy[idx], list_dx[idx]
         ny, nx = y, x
-
+            
         # 한쪽 방향 탐색
         line = [1]  # 현재 위치의 돌
         empty_cnt = 0
@@ -289,26 +288,27 @@ def is_double_three(board, y, x, color):
                 white_stone_cnt += 1
             else:  # 백돌이면 중단
                 break
-
+                
             if empty_cnt >= 2 or black_stone_cnt > 2 or white_stone_cnt >= 1:  # 빈칸이나 돌이 너무 많으면 중단
                 break
-
+            
         # 반대 방향 탐색
         ny, nx = y, x
         empty_cnt = 0
         black_stone_cnt = 0
         white_stone_cnt = 0
 
+            
         while True:
             ny -= yy
             nx -= xx
-
+            
             if is_invalid(ny, nx):
                 break
 
             if white_stone_cnt > 2:
                 break
-
+                
             if gui_board[ny][nx] == 0:
                 line.insert(0, 0)
                 empty_cnt += 1
@@ -316,32 +316,33 @@ def is_double_three(board, y, x, color):
                 line.insert(0, 1)
                 black_stone_cnt += 1
             elif empty_cnt <= 3 and gui_board[ny][nx] == -1:
-                line.insert(0, -1)
+                line.insert(0,-1)
                 white_stone_cnt += 1
             else:
                 break
-
+                
             if empty_cnt >= 2 or black_stone_cnt > 2 or white_stone_cnt >= 1:
                 break
-
+            
         # check if open-3
         if is_open_three(line):
             open_three = True
-
+        
+        
         if open_three:
             cnt += 1
             if cnt >= 2:
                 # print("is SAMSAM")
                 return True
+            
 
     gui_board[y][x] = 0
     return False
 
-
 # returns True if open 3, else False
 def is_open_three(line):
     # return False if closed 3
-    if '-101110-1' in ''.join(map(str, line)):
+    if '-101110-1' in ''.join(map(str,line)):
         return False
     if len(line) >= 4:  # 최소 4칸 이상
         # 33 패턴들
@@ -357,7 +358,7 @@ def is_open_three(line):
                         max_consecutive = max(max_consecutive, consecutive)
                     else:
                         consecutive = 0
-
+                        
                 # 불연속 패턴: ○●●○●○, ○●○●●○
                 if max_consecutive >= 2 or '0110' in ''.join(map(str, line)) or '1010' in ''.join(map(str, line)):
                     return True
