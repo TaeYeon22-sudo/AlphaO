@@ -21,6 +21,7 @@ STONE_SIZE = 15
 
 class GomokuBoard(QWidget):
     game_over_signal = pyqtSignal(str)
+    turn_changed_signal = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,6 +30,7 @@ class GomokuBoard(QWidget):
         self.last_move = None
         self.selected_move = None
         self.parent_widget = parent
+
 
         ############  MINIMAX ##########################################################################################
         # self.ai_model = "minimax_model"                                                                      #
@@ -43,43 +45,25 @@ class GomokuBoard(QWidget):
         self.is_ai_turn = False
 
         # trained_nn model loading
-        # model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data", "model_checkpoint_iter_57.pth")
         model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data",
                                   "model_checkpoint_iter_95.pth") # TODO: update
         # use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.net = GomokuNet().to(device)
-        # checkpoint = torch.load(model_path, map_location=device)
-        # self.net.load_state_dict(checkpoint["model_state_dict"])
         self.net.load_state_dict(torch.load(model_path, map_location=device))
-
         self.net.eval()
         self.device = device
 
         # TODO : make the size to be flexible : if window becomes smaller, the board scales down too
         self.setFixedSize(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE)
 
-        #################################################################
-        # TODO ??? self.setFixedSize(self.sizeHint())
-        # TODO : using image background, need to work on making exact placements
-        # self.board_image = QPixmap(os.path.join(os.path.dirname(__file__), "board_img.png"))
-        # 배경 이미지 경로를 assets 폴더로 수정
-        self.background_img = QPixmap(os.path.join(os.path.dirname(__file__), "assets", "white_background.png"))
-        #################################################################
-
     def paintEvent(self, event):
         """Draws the board grid and stones."""
         painter = QPainter(self)
         # antialiasing to make lines smoother
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        # painter.setBackground(Qt.GlobalColor.white)
-
-        #################################################################
-        # TODO : using image backgounrd
-        # scaled_board = self.board_image.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio)
-        scaled_board = self.background_img.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio)
-        painter.drawPixmap(0, 0, scaled_board)
-        #################################################################
+        # board background color
+        painter.fillRect(self.rect(), QColor("#DEB887"))
 
         # Draw grid
         pen = QPen(Qt.GlobalColor.black, 2)
@@ -172,7 +156,8 @@ class GomokuBoard(QWidget):
                 self.is_ai_turn = False
                 return
 
-            self.current_player = -1
+            self.current_player = -self.current_player
+            self.turn_changed_signal.emit()
             self.is_ai_turn = True
             QTimer.singleShot(100, self.run_ai_move)
 
@@ -205,7 +190,7 @@ class GomokuBoard(QWidget):
                 self.clearBoard()
 
     def mcts_ai_move(self):
-        # 현재 보드 상태와 현재 플레이어 정보를 사용하여 AI가 돌 두기
+        """Execute mcts AI move"""
         current_state = GomokuState(copy.deepcopy(self.board), self.current_player)
         agent = MCTSAgent(iterations=10, max_playout_depth=7)  # TODO: iteration, max_playout_depth
         move = agent.select_move(current_state)
@@ -221,16 +206,9 @@ class GomokuBoard(QWidget):
                 self.is_ai_turn = False
                 return
 
-            self.current_player = -self.current_player
-            self.is_ai_turn = False
-            # 만약 AI 턴 후에도 AI가 계속 두어야 한다면 (예: 두 명의 AI 대결), 여기서 다시 호출
-            # if self.current_player == -1:
-            #     QTimer.singleShot(500, self.ai_move)
 
     def minimax_ai_move(self):
-        """Execute AI move"""
-        # if self.is_ai_turn and self.is_ai_enabled:
-        # QApplication.processEvents()  # Allow GUI to update
+        """Execute minimax AI move"""
         move = self.ai.get_best_move(self.board, self.current_player)
         print(move)
         if move:
@@ -244,12 +222,10 @@ class GomokuBoard(QWidget):
                     self.game_over_signal.emit(winner_color)
                     self.is_ai_turn = False
                     return
-                else:
-                    self.current_player = -1  # if self.current_player == 1 else 1
-                    self.is_ai_turn = False
+
 
     def nn_ai_move(self):
-        """Execute one network‐guided move."""
+        """Execute one network-guided move."""
         # assemble input tensor: shape (1, C, 15, 15)
         board_tensor = board_to_tensor(self.board, self.current_player)
         board_tensor = board_tensor.unsqueeze(0).to(self.device)
@@ -279,10 +255,7 @@ class GomokuBoard(QWidget):
             self.game_over_signal.emit(winner_color)
             self.is_ai_turn = False
             return
-
-        # hand control back to the human
-        self.current_player = 1
-        self.is_ai_turn = False
+        
 
     def run_ai_move(self):
         if not self.is_ai_turn:
@@ -290,20 +263,18 @@ class GomokuBoard(QWidget):
 
         start_time = time.time()
         if self.selected_ai_model == "minimax":
-            # print("minimax")
             self.minimax_ai_move()
         elif self.selected_ai_model == "mcts":
-            # print("mcts")
             self.mcts_ai_move()
         elif self.selected_ai_model == "dl":
-            # print("dl")
             self.nn_ai_move()
         else:
             print("⚠️ Error occured in selecting model!")
         end_time = time.time()
         print(f"AI move execution time: {end_time - start_time:.6f} seconds")
 
-        self.current_player = 1
+        self.current_player = -self.current_player
+        self.turn_changed_signal.emit()
         self.is_ai_turn = False
         self.update()
 

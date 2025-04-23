@@ -1,4 +1,3 @@
-# gomoku_gui.py
 import sys, os
 from PyQt6.QtWidgets import QApplication, QDialog, QStackedWidget, QVBoxLayout, QFormLayout, QHBoxLayout, QLabel, \
     QPushButton, QComboBox, QRadioButton, QMessageBox, QWidget
@@ -57,7 +56,6 @@ class Main(QDialog):
         main_layout.addRow(start_button_layout)
 
         # default settings
-        # self.main_page.setLayout(main_layout)
         main_page_widget.setLayout(main_layout)
         return main_page_widget
 
@@ -72,21 +70,24 @@ class Main(QDialog):
         board_layout.addStretch()
 
         # widgets
-        label_widget = QLabel("ALPHAO!")
+        self.gomoku_board = GomokuBoard(parent=self)
+        self.turn_label = QLabel()
+        self.update_turn_label()
         surrender_button_widget = QPushButton("surrender")
         place_button_widget = QPushButton("place")
-        self.gomoku_board = GomokuBoard(parent=self)
         place_button_widget.clicked.connect(self.gomoku_board.confirm_move)
 
         # widget customize & functions
-        label_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label_widget.setStyleSheet("font-size: 24px; font-weight: bold;")
+        self.turn_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.turn_label.setStyleSheet("font-size: 24px; font-weight: bold;")
+
         surrender_button_widget.clicked.connect(
             lambda: self.handle_game_over("Black" if self.gomoku_board.current_player == -1 else "White"))
         self.gomoku_board.game_over_signal.connect(self.handle_game_over)
 
         # sub-layout ordering
-        layout.addWidget(label_widget)
+        # layout.addWidget(label_widget)
+        layout.addWidget(self.turn_label)
         buttons_layout.addWidget(surrender_button_widget)
         buttons_layout.addWidget(place_button_widget)
         board_layout.addWidget(self.gomoku_board)
@@ -98,8 +99,10 @@ class Main(QDialog):
         main_layout.addRow(buttons_layout)
 
         # default settings
-        # self.game_page.setLayout(main_layout)
         game_page_widget.setLayout(main_layout)
+
+        self.gomoku_board.turn_changed_signal.connect(self.update_turn_label)
+
         return game_page_widget
 
     def start_game_with_selected_model(self):
@@ -126,6 +129,12 @@ class Main(QDialog):
         msg_box.exec()
         self.stacked_widget.setCurrentWidget(self.main_page)
         self.gomoku_board.clearBoard()
+
+
+    def update_turn_label(self):
+        player_str = "Black" if self.gomoku_board.current_player == 1 else "White"
+        self.turn_label.setText(f"Turn: {player_str} player")
+
 
 
 if __name__ == '__main__':
