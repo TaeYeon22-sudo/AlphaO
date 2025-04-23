@@ -45,7 +45,7 @@ class GomokuBoard(QWidget):
         # trained_nn model loading
         # model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data", "model_checkpoint_iter_57.pth")
         model_path = os.path.join(os.path.dirname(__file__), "ai_training", "trained_data",
-                                  "model_checkpoint_iter_57.pth")
+                                  "model_checkpoint_iter_95.pth") # TODO: update
         # use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.net = GomokuNet().to(device)
@@ -322,9 +322,9 @@ class GomokuBoard(QWidget):
                 return False
         return True
 
-    if __name__ == '__main__':
-        app = QApplication(sys.argv)
-        window = GomokuBoard()
-        window.setWindowTitle("AlphO")
-        window.show()
-        sys.exit(app.exec())
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = GomokuBoard()
+    window.setWindowTitle("AlphO")
+    window.show()
+    sys.exit(app.exec())
