@@ -1,7 +1,7 @@
 import sys, os
 from PyQt6.QtWidgets import QApplication, QDialog, QStackedWidget, QVBoxLayout, QFormLayout, QHBoxLayout, QLabel, \
     QPushButton, QComboBox, QRadioButton, QMessageBox, QWidget
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from gomoku_board import GomokuBoard
 from PyQt6.QtGui import QPixmap
 
@@ -43,9 +43,11 @@ class Main(QDialog):
         self.level_widget.addItems(["Choose model", "Minimax", "MCTS", "DL"])
         # choose white/black stone
         # TODO : 컴퓨터랑 사람이랑 턴제로 하는데, 사람이 색 선택시... function 만들기
-        radio_white, radio_black = QRadioButton("White"), QRadioButton("Black")
-        color_layout.addWidget(radio_white)
-        color_layout.addWidget(radio_black)
+        self.radio_white = QRadioButton("White")
+        self.radio_black = QRadioButton("Black")
+        color_layout.addWidget(self.radio_white)
+        color_layout.addWidget(self.radio_black)
+
 
         # ordering of layouts/widgets (top -> down)
         layout1.addWidget(label_widget)
@@ -109,6 +111,18 @@ class Main(QDialog):
         selected_text = self.level_widget.currentText().lower()
         if selected_text in ["minimax", "mcts", "dl"]:
             self.gomoku_board.selected_ai_model = selected_text
+
+            # start_player color check
+            if self.radio_black.isChecked():
+                self.gomoku_board.current_player = 1
+                self.gomoku_board.is_ai_turn = False
+            elif self.radio_white.isChecked():
+                self.gomoku_board.current_player = -1
+                self.gomoku_board.is_ai_turn = True
+                QTimer.singleShot(100, self.gomoku_board.run_ai_move)
+
+            self.update_turn_label()
+            self.gomoku_board.update()
             self.stacked_widget.setCurrentWidget(self.game_page)
         else:
             msg_box = QMessageBox(self)
