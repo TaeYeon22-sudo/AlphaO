@@ -26,6 +26,7 @@ class GomokuBoard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.board = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]
+        self.player_color = 0
         self.current_player = 1
         self.last_move = None
         self.selected_move = None

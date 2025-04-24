@@ -114,11 +114,11 @@ class Main(QDialog):
 
             # start_player color check
             if self.radio_black.isChecked():
-                self.gomoku_board.current_player = 1
                 self.gomoku_board.is_ai_turn = False
+                self.gomoku_board.player_color = 1
             elif self.radio_white.isChecked():
-                self.gomoku_board.current_player = -1
                 self.gomoku_board.is_ai_turn = True
+                self.gomoku_board.player_color = -1
                 QTimer.singleShot(100, self.gomoku_board.run_ai_move)
 
             self.update_turn_label()
@@ -146,8 +146,9 @@ class Main(QDialog):
 
 
     def update_turn_label(self):
-        player_str = "Black" if self.gomoku_board.current_player == 1 else "White"
-        self.turn_label.setText(f"Turn: {player_str} player")
+        player_str1 = "Black" if self.gomoku_board.current_player == 1 else "White"
+        player_str2 = "Player" if self.gomoku_board.player_color == self.gomoku_board.current_player else "AI"
+        self.turn_label.setText(f"Turn: {player_str1} {player_str2}")
 
 
 
