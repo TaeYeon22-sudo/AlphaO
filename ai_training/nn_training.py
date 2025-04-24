@@ -1,5 +1,5 @@
 import os
-import math
+import math, time
 import torch
 import torch.optim as optim
 import numpy as np
@@ -210,15 +210,18 @@ if __name__ == '__main__':
     else:
         print("⚠️ No checkpoint found. Starting from scratch.")
 
-    total_iterations = 100
+    total_iterations = 101
     for iteration in range(last_iter, total_iterations):
         print(f"\nIteration {iteration+1}/{total_iterations}: Self-play phase")
+        
+        start_selfplay = time.time()
         training_examples = play_self_games(model, num_games=10, num_simulations=100)
+        end_selfplay = time.time()
+        print(f"⏱️ Self-play time: {end_selfplay - start_selfplay:.2f} seconds")
 
         print("Training phase")
-        train_model(model, training_examples, epochs=10, batch_size=32, learning_rate=1e-3)
-
-        ckpt_path = os.path.join(ckpt_dir, f"model_checkpoint_iter_{iteration+1}.pth")
-        torch.save(model.state_dict(), ckpt_path)
-        print(f"💾 Saved checkpoint to {ckpt_path}")
+        start_train = time.time()
+        train_model(model, training_examples, epochs=10, batch_size=32, learning_rate=1e-3) # 학습 많이 진행되면 낮추기 : 5e-4 or 1e-4 or 1e-5
+        end_train = time.time()
+        print(f"⏱️ Training time: {end_train - start_train:.2f} seconds")
 
