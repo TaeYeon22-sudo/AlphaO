@@ -158,6 +158,11 @@ class GomokuBoard(QWidget):
 
             self.current_player = -self.current_player
             self.turn_changed_signal.emit()
+
+            if self.selected_ai_model == "pvp":
+                self.ai_turn = False
+                return
+            
             self.is_ai_turn = True
             QTimer.singleShot(100, self.run_ai_move)
 

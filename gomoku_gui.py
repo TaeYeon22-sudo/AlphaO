@@ -40,7 +40,7 @@ class Main(QDialog):
 
         # choose level difficulty
         self.level_widget = QComboBox()
-        self.level_widget.addItems(["Choose model", "Minimax", "MCTS", "DL"])
+        self.level_widget.addItems(["Choose model", "Minimax", "MCTS", "DL", "PVP"])
         # choose white/black stone
         # TODO : 컴퓨터랑 사람이랑 턴제로 하는데, 사람이 색 선택시... function 만들기
         self.radio_white = QRadioButton("White")
@@ -109,7 +109,7 @@ class Main(QDialog):
 
     def start_game_with_selected_model(self):
         selected_text = self.level_widget.currentText().lower()
-        if selected_text in ["minimax", "mcts", "dl"]:
+        if selected_text in ["minimax", "mcts", "dl", "pvp"]:
             self.gomoku_board.selected_ai_model = selected_text
 
             # start_player color check
