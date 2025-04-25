@@ -78,9 +78,10 @@ class MCTSNode:
         return self.children[choices.index(max(choices))]
 
 class MCTSAgent:
-    def __init__(self, iterations=10, max_playout_depth=10):
+    def __init__(self, iterations=10, max_playout_depth=10, epsilon=0.3):
         self.iterations = iterations
         self.max_playout_depth = max_playout_depth
+        self.epsilon = epsilon
     # def __init__(self, time_limit=5.0):  # 1초 제한
     #     self.time_limit = time_limit
 
@@ -123,6 +124,12 @@ class MCTSAgent:
                         move_scores.append((move, total_score))
 
                     # 최고 점수를 가진 move 선택 (여러 개라면 그 중 하나 선택)
+                    # move_scores.sort(key=lambda x: x[1], reverse=True)
+                    # # 입실론 확률로 두 번째 좋은 수를 선택, 아니면 가장 좋은 수 선택
+                    # if random.random() < self.epsilon and len(move_scores) > 1:
+                    #     best_move = move_scores[1][0]  # 두 번째로 높은 점수의 move
+                    # else:
+                    #     best_move = move_scores[0][0]  # 가장 높은 점수의 move
                     best_move = max(move_scores, key=lambda x: x[1])[0]
                     state = state.play_move(best_move)
                     new_node = MCTSNode(state, parent=node, move=best_move)
