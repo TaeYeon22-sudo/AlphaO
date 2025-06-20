@@ -20,6 +20,7 @@ def is_board_full(self, y, x):
 def is_invalid(y, x):
     return x < 0 or x > 14 or y < 0 or y > 14
 
+
 #####################################
 # 이거 이름을 check_list_for_win() 같은걸로 바꾸는게?
 #####################################
@@ -51,12 +52,13 @@ def check_if_win(gui_board, y, x, color):
     '''
 
     # 가로줄 ; This removes edge cases
-    if (gui_board[y][max(0,x-1)] == color) or (gui_board[y][min(14,x+1)] == color):  # TODO: is this needed??
+    if (gui_board[y][max(0, x - 1)] == color) or (gui_board[y][min(14, x + 1)] == color):  # TODO: is this needed??
         # normal case or edge cases
-        if ((x != 14 and x != 0) or (x == 14 and gui_board[y][x-1] == color) or (x == 0 and gui_board[y][x+1] == color)):
+        if ((x != 14 and x != 0) or (x == 14 and gui_board[y][x - 1] == color) or (
+                x == 0 and gui_board[y][x + 1] == color)):
             # checking line reset
             line = []
-            for i in range(max(0, x-5), min(15, x+6), 1):
+            for i in range(max(0, x - 5), min(15, x + 6), 1):
                 # double checks index out of bound error
                 if 0 <= y < 15 and 0 <= i < 15:
                     line.append(gui_board[y][i])
@@ -65,7 +67,8 @@ def check_if_win(gui_board, y, x, color):
 
     # 세로줄 (14,12)
     if (gui_board[max(0, y - 1)][x] == color) or (gui_board[min(14, y + 1)][x] == color):
-        if ((y != 14 and y != 0) or (y == 14 and gui_board[y-1][x] == color) or (y == 0 and gui_board[y+1][x] == color)):
+        if ((y != 14 and y != 0) or (y == 14 and gui_board[y - 1][x] == color) or (
+                y == 0 and gui_board[y + 1][x] == color)):
             # checking line reset
             line = []
             for i in range(max(0, y - 5), min(15, y + 6), 1):
@@ -81,10 +84,10 @@ def check_if_win(gui_board, y, x, color):
         # if ((y != 14 and y != 0 and x != 14 and x != 0) or ((y == 0 or x == 0) and gui_board[y+1][x+1] == color) or ((y == 14 or x == 14) and gui_board[y-1][x-1] == color)):
         # checking line reset
         line = []
-        for i in range(-5 , 6 , 1):
+        for i in range(-5, 6, 1):
             # double checks index out of bound error
             if 0 <= y + i < 15 and 0 <= x + i < 15:
-                line.append(gui_board[y+i][x+i])
+                line.append(gui_board[y + i][x + i])
         # check for 5-win
         if check_list(color, line): return True
 
@@ -93,13 +96,12 @@ def check_if_win(gui_board, y, x, color):
         # if ((y != 14 and y != 0 and x != 14 and x != 0) or ((y == 14 or x == 0) and gui_board[y-1][x+1]) or ((y == 0 or x == 14) and gui_board[y+1][x-1])):
         # checking line reset
         line = []
-        for i in range(-5 , 6 , 1):
+        for i in range(-5, 6, 1):
             # double checks index out of bound error
             if 0 <= y + i < 15 and 0 <= x - i < 15:
-                line.append(gui_board[y+i][x-i])
+                line.append(gui_board[y + i][x - i])
         # check for 5-win
         if check_list(color, line): return True
-
 
     # if not 5 stone
     return False
@@ -124,7 +126,9 @@ def find_prohibit_point(gui_board, y, x):
                 # Empty
                 if gui_board[cur_y][cur_x] == 0:
                     empty += 1
-                    if is_double_three(gui_board, cur_y, cur_x) or is_double_four(gui_board, cur_y, cur_x) or is_overline(gui_board, cur_y,cur_x):
+                    if is_double_three(gui_board, cur_y, cur_x) or is_double_four(gui_board, cur_y,
+                                                                                  cur_x) or is_overline(gui_board,
+                                                                                                        cur_y, cur_x):
                         ban.append({cur_y, cur_x})
                 # Black
                 elif gui_board[cur_y][cur_x] == 1:
@@ -216,12 +220,11 @@ def make_five_row(line):
             before_find = True
 
     return total_count
-            
 
 
 # 장목 확인
 # 4방향 확인해서 돌이 6개 이상 인지 확인
-def is_overline(gui_board, y,x):
+def is_overline(gui_board, y, x):
     for j in range(4):
         cnt = 1
         # 양쪽의 돌을 같이 세서 한번에 확인
@@ -358,6 +361,5 @@ def is_open_three(line):
                 # 불연속 패턴: ○●●○●○, ○●○●●○
                 if max_consecutive >= 2 or '0110' in ''.join(map(str, line)) or '1010' in ''.join(map(str, line)):
                     return True
-    
+
     return False
-                        

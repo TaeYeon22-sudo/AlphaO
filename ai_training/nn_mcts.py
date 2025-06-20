@@ -156,12 +156,11 @@ def mcts_simulation(node, model, current_player):
     """
     terminal, winner = is_terminal(node.board)
     if terminal:
-        # Return simulation result from the perspective of the original current player.
         return 1 if winner == current_player else -1
 
     allowed_moves = get_allowed_moves(node.board, current_player)
     if not allowed_moves:
-        return 0  # Consider it a draw if no moves remain.
+        return 0
 
     if not node.expanded:
         policy, value = evaluate_state(node.board, model, node.current_player)
@@ -170,12 +169,42 @@ def mcts_simulation(node, model, current_player):
             prior = policy[move_to_index(move, node.board)]
             node.create_child(move, child_board, prior)
         node.expanded = True
+
+        # 확장된 노드도 방문 업데이트
+        node.update(value)
         return value
 
     selected_move, selected_child = node.select_child()
     simulation_result = mcts_simulation(selected_child, model, current_player)
+
+    # 자식 노드(child)에도 방문 업데이트
+    selected_child.update(simulation_result)
+    # 그리고 부모 노드도 업데이트
     node.update(simulation_result)
     return simulation_result
+
+    # terminal, winner = is_terminal(node.board)
+    # if terminal:
+    #     # Return simulation result from the perspective of the original current player.
+    #     return 1 if winner == current_player else -1
+    #
+    # allowed_moves = get_allowed_moves(node.board, current_player)
+    # if not allowed_moves:
+    #     return 0  # Consider it a draw if no moves remain.
+    #
+    # if not node.expanded:
+    #     policy, value = evaluate_state(node.board, model, node.current_player)
+    #     for move in allowed_moves:
+    #         child_board = make_move(node.board, move, node.current_player)
+    #         prior = policy[move_to_index(move, node.board)]
+    #         node.create_child(move, child_board, prior)
+    #     node.expanded = True
+    #     return value
+    #
+    # selected_move, selected_child = node.select_child()
+    # simulation_result = mcts_simulation(selected_child, model, current_player)
+    # node.update(simulation_result)
+    # return simulation_result
 
 ##############################################
 # Example: Running MCTS with Neural Guidance

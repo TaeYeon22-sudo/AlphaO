@@ -38,6 +38,8 @@ def select_move_from_root(root, temperature=1.0):
 
     if temperature == 0:
         move_index = np.argmax(counts)
+        probs = np.zeros_like(counts)
+        probs[move_index] = 1.0
     else:
         # Apply temperature to the counts.
         counts = counts ** (1.0 / temperature)
@@ -185,6 +187,46 @@ def train_model(model, training_data, epochs=10, batch_size=32, learning_rate=1e
         average_loss = total_loss / num_batches
         print(f"Epoch {epoch+1}/{epochs}, Loss: {average_loss:.4f}")
 
+
+
+from multiprocessing import Pool, cpu_count
+
+def run_self_play(args):
+    model_state_dict, board_size, num_simulations = args
+
+    # 모델을 새로 만들고 state_dict 로드
+    from nn_deeplearning import GomokuNet
+    from nn_training import self_play_game  # 필요하면 모듈 구조에 맞게 수정
+
+    model = GomokuNet(board_size=board_size, input_channels=3, num_res_blocks=5, num_filters=64)
+    model.load_state_dict(model_state_dict)
+    model.to("cpu")  # self-play는 CPU로
+
+    return self_play_game(model, num_simulations=num_simulations)
+
+def parallel_self_play(model, num_games=10, num_simulations=100):
+    """
+    모델을 CPU용 state_dict로 serialize한 후 각 프로세스에 전달하여 self-play 병렬 실행.
+    """
+    model.eval()
+    model_cpu = model.to("cpu")
+    model_state_dict = model_cpu.state_dict()
+
+    args_list = [(model_state_dict, model_cpu.board_size, num_simulations)] * num_games
+    num_workers = min(cpu_count(), num_games)
+
+    with Pool(processes=num_workers) as pool:
+        results = pool.map(run_self_play, args_list)
+
+    all_examples = []
+    for game_data in results:
+        all_examples.extend(game_data)
+    return all_examples
+
+
+
+
+
 ##############################################
 # Main Training Routine
 ##############################################
@@ -212,16 +254,39 @@ if __name__ == '__main__':
 
     total_iterations = 101
     for iteration in range(last_iter, total_iterations):
-        print(f"\nIteration {iteration+1}/{total_iterations}: Self-play phase")
-        
-        start_selfplay = time.time()
-        training_examples = play_self_games(model, num_games=10, num_simulations=100)
-        end_selfplay = time.time()
-        print(f"⏱️ Self-play time: {end_selfplay - start_selfplay:.2f} seconds")
+        # print(f"\nIteration {iteration+1}/{total_iterations}: Self-play phase")
+        #
+        # start_selfplay = time.time()
+        # training_examples = play_self_games(model, num_games=10, num_simulations=100)
+        # end_selfplay = time.time()
+        # print(f"⏱️ Self-play time: {end_selfplay - start_selfplay:.2f} seconds")
+        #
+        # print("Training phase")
+        # start_train = time.time()
+        # train_model(model, training_examples, epochs=10, batch_size=32, learning_rate=1e-3) # 학습 많이 진행되면 낮추기 : 5e-4 or 1e-4 or 1e-5
+        # end_train = time.time()
+        # print(f"⏱️ Training time: {end_train - start_train:.2f} seconds")
+
+        print(f"\nIteration {iteration + 1}/{total_iterations}: Self-play phase")
+
+        # ✅ 병렬 self-play 실행
+        training_examples = parallel_self_play(model, num_games=10, num_simulations=100)
 
         print("Training phase")
-        start_train = time.time()
-        train_model(model, training_examples, epochs=10, batch_size=32, learning_rate=1e-3) # 학습 많이 진행되면 낮추기 : 5e-4 or 1e-4 or 1e-5
-        end_train = time.time()
-        print(f"⏱️ Training time: {end_train - start_train:.2f} seconds")
+        train_model(model.to(device), training_examples, epochs=10, batch_size=32, learning_rate=1e-3)
+
+        ckpt_path = os.path.join(ckpt_dir, f"model_checkpoint_iter_{iteration + 1}.pth")
+        torch.save(model.state_dict(), ckpt_path)
+        print(f"💾 Saved checkpoint to {ckpt_path}")
+
+        # mcts branch
+        # print(f"\nIteration {iteration+1}/{total_iterations}: Self-play phase")
+        # training_examples = play_self_games(model, num_games=10, num_simulations=100)
+        #
+        # print("Training phase")
+        # train_model(model, training_examples, epochs=10, batch_size=32, learning_rate=1e-3)
+        #
+        # ckpt_path = os.path.join(ckpt_dir, f"model_checkpoint_iter_{iteration+1}.pth")
+        # torch.save(model.state_dict(), ckpt_path)
+        # print(f"💾 Saved checkpoint to {ckpt_path}")
 

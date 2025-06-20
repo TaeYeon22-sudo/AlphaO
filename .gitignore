@@ -1,11 +1,15 @@
-testing.py
-coordinate_conversion.py
+# macOS/IDE 관련
 .DS_Store
-__pycache__
-board_img.png
-samsam_test.py
-minimax_reference
-.vscode
-test.py
+.idea/
+
+# 가상환경
+venv/
+alphao_venv/
+
+# 컴파일/캐시
+__pycache__/
+*.pyc
+
+# 테스트용 스크립트
+test*.py
 old_codes.py
-alphao_venv

@@ -198,7 +198,7 @@ class GomokuBoard(QWidget):
     def mcts_ai_move(self):
         """Execute mcts AI move"""
         current_state = GomokuState(copy.deepcopy(self.board), self.current_player)
-        agent = MCTSAgent(iterations=10, max_playout_depth=7)  # TODO: iteration, max_playout_depth
+        agent = MCTSAgent(iterations=100, max_playout_depth=7)  # TODO: iteration, max_playout_depth
         move = agent.select_move(current_state)
         if move is not None:
             row, col = move
