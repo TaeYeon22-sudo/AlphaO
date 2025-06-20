@@ -14,11 +14,7 @@ from nn_mcts import (
     is_terminal,
 )
 
-# Set device: use "cuda" if GPU is available, else CPU.
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
-if torch.cuda.is_available():
-    print("GPU Name:", torch.cuda.get_device_name(0))
+
 
 ##############################################
 # Self-Play and Training Functions
@@ -232,6 +228,12 @@ def parallel_self_play(model, num_games=10, num_simulations=100):
 ##############################################
 
 if __name__ == '__main__':
+    # Set device: use "cuda" if GPU is available, else CPU.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device:", device)
+    if torch.cuda.is_available():
+        print("GPU Name:", torch.cuda.get_device_name(0))
+
     board_size = 15
     model = GomokuNet(board_size=board_size, input_channels=3, num_res_blocks=5, num_filters=64)
     model.to(device)
@@ -242,7 +244,7 @@ if __name__ == '__main__':
 
     # Load latest checkpoint
     last_iter = 0
-    for i in range(100, 0, -1):
+    for i in range(500, 0, -1):
         ckpt_path = os.path.join(ckpt_dir, f"model_checkpoint_iter_{i}.pth")
         if os.path.exists(ckpt_path):
             model.load_state_dict(torch.load(ckpt_path, map_location=device))
@@ -252,7 +254,7 @@ if __name__ == '__main__':
     else:
         print("⚠️ No checkpoint found. Starting from scratch.")
 
-    total_iterations = 101
+    total_iterations = 500
     for iteration in range(last_iter, total_iterations):
         # print(f"\nIteration {iteration+1}/{total_iterations}: Self-play phase")
         #
@@ -267,13 +269,19 @@ if __name__ == '__main__':
         # end_train = time.time()
         # print(f"⏱️ Training time: {end_train - start_train:.2f} seconds")
 
+        start_selfplay = time.time()
         print(f"\nIteration {iteration + 1}/{total_iterations}: Self-play phase")
 
         # ✅ 병렬 self-play 실행
         training_examples = parallel_self_play(model, num_games=10, num_simulations=100)
+        end_selfplay = time.time()
+        print(f"⏱️ Self-play time: {end_selfplay - start_selfplay:.2f} seconds")
 
         print("Training phase")
+        start_train = time.time()
         train_model(model.to(device), training_examples, epochs=10, batch_size=32, learning_rate=1e-3)
+        end_train = time.time()
+        print(f"⏱️ Training time: {end_train - start_train:.2f} seconds")
 
         ckpt_path = os.path.join(ckpt_dir, f"model_checkpoint_iter_{iteration + 1}.pth")
         torch.save(model.state_dict(), ckpt_path)
