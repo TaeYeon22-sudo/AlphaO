@@ -78,9 +78,10 @@ class MCTSNode:
         return self.children[choices.index(max(choices))]
 
 class MCTSAgent:
-    def __init__(self, iterations=10, max_playout_depth=10):
+    def __init__(self, iterations=10, max_playout_depth=10, epsilon=0.2):
         self.iterations = iterations
         self.max_playout_depth = max_playout_depth
+        self.epsilon = epsilon
     # def __init__(self, time_limit=5.0):  # 1초 제한
     #     self.time_limit = time_limit
 
@@ -114,18 +115,21 @@ class MCTSAgent:
                 tried_moves = [child.move for child in node.children]
                 untried = [move for move in valid_moves if move not in tried_moves]
                 if untried:
+                    if random.random() < self.epsilon:
+                        selected_move = random.choice(untried)
                     # 각 untried move에 대해 heuristic 평가 (여기서는 기본 점수와 위협 차단 점수의 합산)
-                    move_scores = []
-                    for move in untried:
-                        base_score = heuristic_evaluation(state, move)
-                        block_score = threat_blocking_score(state, move)
-                        total_score = base_score + block_score
-                        move_scores.append((move, total_score))
-
+                    else:
+                        move_scores = []
+                        for move in untried:
+                            base_score = heuristic_evaluation(state, move)
+                            block_score = threat_blocking_score(state, move)
+                            total_score = base_score + block_score
+                            move_scores.append((move, total_score))
+                        selected_move = max(move_scores, key=lambda x: x[1])[0]
                     # 최고 점수를 가진 move 선택 (여러 개라면 그 중 하나 선택)
-                    best_move = max(move_scores, key=lambda x: x[1])[0]
-                    state = state.play_move(best_move)
-                    new_node = MCTSNode(state, parent=node, move=best_move)
+
+                    state = state.play_move(selected_move)
+                    new_node = MCTSNode(state, parent=node, move=selected_move)
                     node.children.append(new_node)
                     node = new_node
 

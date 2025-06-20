@@ -206,7 +206,7 @@ class GomokuBoard(QWidget):
     def mcts_ai_move(self):
         # 현재 보드 상태와 현재 플레이어 정보를 사용하여 AI가 돌 두기
         current_state = GomokuState(copy.deepcopy(self.board), self.current_player)
-        agent = MCTSAgent(iterations=10, max_playout_depth=7)  # TODO: iteration, max_playout_depth
+        agent = MCTSAgent(iterations=100, max_playout_depth=7)  # TODO: iteration, max_playout_depth
         move = agent.select_move(current_state)
         if move is not None:
             row, col = move
@@ -321,9 +321,9 @@ class GomokuBoard(QWidget):
                 return False
         return True
 
-    if __name__ == '__main__':
-        app = QApplication(sys.argv)
-        window = GomokuBoard()
-        window.setWindowTitle("AlphO")
-        window.show()
-        sys.exit(app.exec())
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = GomokuBoard()
+    window.setWindowTitle("AlphO")
+    window.show()
+    sys.exit(app.exec())
